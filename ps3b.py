@@ -441,25 +441,51 @@ def simulationWithDrug(numViruses, maxPop, maxBirthProb, clearProb, resistances,
     numTrials: number of simulation runs to execute (an integer)
     
     """
-
-    timeSteps = 1500
-    popSize = [0 for i in range(timeSteps)]
-    resPopSize = {drug:[0 for i in range(timeSteps)] for drug in resistances.keys()}
-    for t in range(numTrials):
-        viruses = [ResistantVirus(maxBirthProb, clearProb, resistances, mutProb) for i in range(numViruses)]
-        patient = TreatedPatient(viruses, maxPop)
-        for step in range(timeSteps):
-            for drug in resistances.keys():
-                if step == breakPoints[drug]:
-                    patient.addPrescription(drug)
-            popSize[step] += patient.update()
-            for drug in resistances.keys():
-                resPopSize[drug][step] += patient.getResistPop([drug])
-       
-    avPopSize = [size/numTrials for size in popSize]
-    avResPopSize = {drug:[size/numTrials for size in resPopSize[drug]] for drug in resistances.keys()}
+    finalPopData =[]
+    mutProbData = []
+    mutProbStep = 0.001
     
-    pylab.plot(avPopSize, label = "Virus")
+    while mutProb <= 0.3:
+    
+        equilibriumRange = 100
+        timeSteps = 400
+        popSize = [0 for i in range(timeSteps)]
+        resPopSize = {drug:[0 for i in range(timeSteps)] for drug in resistances.keys()}
+        for t in range(numTrials):
+            viruses = [ResistantVirus(maxBirthProb, clearProb, resistances, mutProb) for i in range(numViruses)]
+            patient = TreatedPatient(viruses, maxPop)
+            for step in range(timeSteps):
+                for drug in resistances.keys():
+                    if step == breakPoints[drug]:
+                        patient.addPrescription(drug)
+                popSize[step] += patient.update()
+                for drug in resistances.keys():
+                    resPopSize[drug][step] += patient.getResistPop([drug])
+        
+           
+        # avPopSize = [size/numTrials for size in popSize]
+        # avResPopSize = {drug:[size/numTrials for size in resPopSize[drug]] for drug in resistances.keys()}
+        
+        finalPop = [size/numTrials for size in popSize[timeSteps - equilibriumRange:]]
+        
+        finalPopAvg = sum(finalPop)/len(finalPop)
+        print(finalPopAvg)
+        finalPopData.append(finalPopAvg)
+        mutProbData.append(mutProb)
+        
+        mutProb += mutProbStep
+        print(mutProb)
+        
+        
+    pylab.plot(mutProbData, finalPopData)
+    pylab.title("Virus Final Population")
+    pylab.xlabel("Mutation Probability")
+    pylab.ylabel("Average Virus Final Population")
+    pylab.ylim(-10, 1000//2 + 10)
+    
+    
+    
+    '''pylab.plot(avPopSize, label = "Virus")
     for drug in resistances.keys():
         pylab.plot(avResPopSize[drug], label = drug[0].upper() + drug[1:] + " Resistant Virus")
     pylab.title("ResistantVirus simulation")
@@ -468,6 +494,6 @@ def simulationWithDrug(numViruses, maxPop, maxBirthProb, clearProb, resistances,
     pylab.legend(loc = "best")
     pylab.xlim(-10, timeSteps + 10)
     pylab.ylim(-10, 1000//2 + 10)
-    pylab.show()
+    pylab.show()'''
     
-simulationWithDrug(100, 1000, 0.1, 0.05, {"pentagonol": False, "hexagonol":False, "heptagonol":False, "octagonol":False}, 0.1, 10, {"pentagonol": 50, "hexagonol": 1500, "heptagonol":1500, "octagonol":1500})
+simulationWithDrug(50, 300, 0.1, 0.01, {"pentagonol": False, "hexagonol":False, "heptagonol":False, "octagonol":False}, 0.0, 10, {"pentagonol": 50, "hexagonol": 20, "heptagonol":200, "octagonol":200})
